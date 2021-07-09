@@ -715,6 +715,7 @@ Resources:
     DependsOn: [ VaultNameSpace, VaultRole, VaultClusterRole, VaultServiceAccount ]
     Properties:
       ClusterName: !Ref ClusterName
+      Namespace: default
       Manifest: !Sub
       - |
         apiVersion: rbac.authorization.k8s.io/v1
