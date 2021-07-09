@@ -480,13 +480,12 @@ Resources:
     Type: "AWSQS::Kubernetes::Resource"
     Properties:
       ClusterName: !Ref ClusterName
-      Manifest: !Sub
-      - |
+      Namespace: default
+      Manifest: !Sub |
         kind: Namespace
         apiVersion: v1
         metadata:
-          name: ${Namespace}
-      - Namespace: !Ref KubernetesNameSpace
+          name: ${KubernetesNameSpace}
   HashicorpVaultHelmChart:
     Type: "AWSQS::Kubernetes::Helm"
     DependsOn: [ VaultNodeGroup, VaultCertificatesJob ]
