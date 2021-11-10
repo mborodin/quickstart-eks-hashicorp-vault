@@ -59,7 +59,7 @@ openssl req -new -key ${TMPDIR}/vault.key -subj "/CN=${SERVICE}.${NAMESPACE}.svc
 
 echo "Create a CSR Manifest file"
 cat <<EOF >${TMPDIR}/csr.yaml
-apiVersion: certificates.k8s.io/v1beta1
+apiVersion: certificates.k8s.io/v1
 kind: CertificateSigningRequest
 metadata:
   name: ${CSR_NAME}
