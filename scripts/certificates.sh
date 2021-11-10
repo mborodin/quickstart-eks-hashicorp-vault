@@ -1,7 +1,7 @@
 #!/bin/bash -e
 # SERVICE is the name of the Vault service in Kubernetes.
 # It does not have to match the actual running service, though it may help for consistency.
-SERVICE=vault-${RELEASE_NAME}
+SERVICE=vault
 # NAMESPACE where the Vault service is running.
 # NAMESPACE=vault-namespace
 # Exported by executor
@@ -12,8 +12,8 @@ TMPDIR=/tmp
 # Sleep timer
 SLEEP_TIME=15
 # Name of the CSR
-echo "Name the CSR: vault-csr-${RELEASE_NAME}"
-export CSR_NAME=vault-csr-${RELEASE_NAME}
+echo "Name the CSR: vault-csr"
+export CSR_NAME=vault-csr
 
 # Install OpenSSL
 echo "Install openssl"
@@ -64,6 +64,7 @@ kind: CertificateSigningRequest
 metadata:
   name: ${CSR_NAME}
 spec:
+  signerName: kubernetes.io/legacy-unknown
   groups:
   - system:authenticated
   request: $(cat ${TMPDIR}/server.csr | base64 | tr -d '\n')
