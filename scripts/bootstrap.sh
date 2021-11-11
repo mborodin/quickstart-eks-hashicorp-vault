@@ -33,12 +33,12 @@ done
 # See if vault is initialized
 #init=$(kubectl exec -t vault-${RELEASE_NAME}-0 -- vault operator init -status)
 curl -v -fs -k ${PROTOCOL}://${VAULT_0}:8200/v1/sys/init
-init=$(curl -fs -k ${PROTOCOL}://${VAULT_0}:8200/v1/sys/init | jq -r .initialised)
+init=$(curl -fs -k -v ${PROTOCOL}://${VAULT_0}:8200/v1/sys/init | jq -r .initialized)
 
 echo "Is vault initialized: '${init}'"
 
 #if [ "$init" != "Vault is initialized" ]; then
-if [ "$init" != "false" ]; then
+if [ "$init" != "true" ]; then
     echo "Initializing Vault"
     SECRET_VALUE=$(kubectl exec vault-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault operator init -recovery-shares=${VAULT_NUMBER_OF_KEYS} -recovery-threshold=${VAULT_NUMBER_OF_KEYS_FOR_UNSEAL}")
     echo "storing vault init values in secrets manager"
