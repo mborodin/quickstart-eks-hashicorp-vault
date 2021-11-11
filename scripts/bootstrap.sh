@@ -5,7 +5,7 @@ VAULT_NUMBER_OF_KEYS=5
 SLEEP_SECONDS=15
 PROTOCOL=https
 VAULT_PORT=8200
-VAULT_0=vault-${RELEASE_NAME}-0.vault-${RELEASE_NAME}-internal
+VAULT_0=vault-0.vault-internal
 
 get_secret () {
     local value=$(aws secretsmanager --region ${AWS_REGION} get-secret-value --secret-id "$1" | jq --raw-output .SecretString)
@@ -39,7 +39,7 @@ echo "Is vault initialized: '${init}'"
 #if [ "$init" != "Vault is initialized" ]; then
 if [ "$init" != "false" ]; then
     echo "Initializing Vault"
-    SECRET_VALUE=$(kubectl exec vault-${RELEASE_NAME}-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault operator init -recovery-shares=${VAULT_NUMBER_OF_KEYS} -recovery-threshold=${VAULT_NUMBER_OF_KEYS_FOR_UNSEAL}")
+    SECRET_VALUE=$(kubectl exec vault-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault operator init -recovery-shares=${VAULT_NUMBER_OF_KEYS} -recovery-threshold=${VAULT_NUMBER_OF_KEYS_FOR_UNSEAL}")
     echo "storing vault init values in secrets manager"
     aws secretsmanager put-secret-value --region ${AWS_REGION} --secret-id ${VAULT_SECRET} --secret-string "${SECRET_VALUE}"
 else
@@ -71,14 +71,14 @@ VAULT_SECRET_VALUE=$(get_secret ${VAULT_SECRET})
 root_token=$(echo ${VAULT_SECRET_VALUE} | awk '{ if (match($0,/Initial Root Token: (.*)/,m)) print m[1] }' | cut -d " " -f 1)
 
 # Show who we have joined
-kubectl exec vault-${RELEASE_NAME}-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault login token=$root_token 2>&1 > /dev/null"  # Hide this output from the console
+kubectl exec vault-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault login token=$root_token 2>&1 > /dev/null"  # Hide this output from the console
 
 # Join other pods to the raft cluster
 # TODO: Make this flexible for 3 5 7 nodes etc
-kubectl exec -t vault-${RELEASE_NAME}-1 -- "/bin/sh" "-c" "vault operator raft join -tls-skip-verify -leader-ca-cert=\"$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)\" ${PROTOCOL}://${VAULT_0}:${VAULT_PORT}"
-kubectl exec -t vault-${RELEASE_NAME}-2 -- "/bin/sh" "-c" "vault operator raft join -tls-skip-verify -leader-ca-cert=\"$(cat /var/run/secrets/kubernetes.io/serviceaccount/ca.crt)\" ${PROTOCOL}://${VAULT_0}:${VAULT_PORT}"
+kubectl exec -t vault-1 -- "/bin/sh" "-c" "vault operator raft join -tls-skip-verify -leader-ca-cert=\"$(cat /vault/userconfig/vault-server-tls/vault.ca)\" ${PROTOCOL}://${VAULT_0}:${VAULT_PORT}"
+kubectl exec -t vault-2 -- "/bin/sh" "-c" "vault operator raft join -tls-skip-verify -leader-ca-cert=\"$(cat /vault/userconfig/vault-server-tls/vault.ca)\" ${PROTOCOL}://${VAULT_0}:${VAULT_PORT}"
 
 # Show who we have joined
-kubectl exec -t vault-${RELEASE_NAME}-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault operator raft list-peers"
+kubectl exec -t vault-0 -- "/bin/sh" "-c" "export VAULT_SKIP_VERIFY=true && vault operator raft list-peers"
 # If we see All raft peers we have succeeded in bootstrapping.
 # TODO: Add validation for the number ... currently relying on exit 0 status of kubectl command
