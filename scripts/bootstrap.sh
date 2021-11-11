@@ -32,6 +32,7 @@ done
 
 # See if vault is initialized
 #init=$(kubectl exec -t vault-${RELEASE_NAME}-0 -- vault operator init -status)
+curl -v -fs -k ${PROTOCOL}://${VAULT_0}:8200/v1/sys/init
 init=$(curl -fs -k ${PROTOCOL}://${VAULT_0}:8200/v1/sys/init | jq -r .initialised)
 
 echo "Is vault initialized: '${init}'"
